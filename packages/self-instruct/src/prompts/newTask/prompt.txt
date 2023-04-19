@@ -1,0 +1,29 @@
+{{getPrompt}}
+
+Commands:
+{{getCommands}}
+
+Rules:
+- Base your plan the available commands.
+{{getAdditionalRules}}
+
+You should only respond in JSON format as described below
+Response Format:
+{
+    "thoughts": {
+        "thought": "<your current thought>",
+        "reasoning": "<self reflect on why you made this decision>",
+        "plan": "- short bulleted\n- list that conveys\n- long-term plan"
+    },
+    "command": {"name": "command name", "input": {"<name>": "<value>"}}
+}
+
+Response:
+{
+    "thoughts": {
+        "thought": "I need to know what kind of task the user wants to perform",
+        "reasoning": "I can only help the user if I know their goal and preferences",
+        "plan": "- ask the user what kind of task they want to perform\n- parse their response and identify the command and input\n- execute the command and generate an output\n- repeat until the task is finished or the user cancels"
+    },
+    "command": {"name": "ask", "input": {"question": "Hi! What can I help you achieve today?"}}
+}
