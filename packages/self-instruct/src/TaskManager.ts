@@ -37,7 +37,7 @@ export interface TaskManagerConfiguration {
     /**
      * Optional. Model settings to use for the continueTask() prompt. Defaults to using 'gpt-3.5-turbo'
      */
-    continueTaskModel?: string;
+    continueTaskModel?: ModelSettings;
 
     /**
      * Optional. Additional set of rules to pass into the prompt.
@@ -64,6 +64,10 @@ export interface TaskResult {
 
 export class TaskManager<TAppContext = any> {
     private static readonly _allCommands = new Map<string, CommandRegistration>();
+
+    // Constants
+    private static readonly IN_TASK_PROPERTY = '__in_task__';
+    private static readonly TASK_HISTORY_PROPERTY = '__task_history__';
 
     // Reserved Commands
     private static readonly ASK_COMMAND: CommandUsage = {
@@ -157,12 +161,52 @@ export class TaskManager<TAppContext = any> {
         }
     }
 
-    public async newTask(memory: Memory, userMessage?: string|undefined, context: TAppContext = undefined): Promise<TaskResult> {
+    public inTask(memory: Memory): boolean {
+        return !!memory.get(TaskManager.IN_TASK_PROPERTY);
+    }
 
+    public completeTask(memory: Memory, userMessage: string, context: TAppContext = undefined): Promise<TaskResult> {
+        if (this.inTask(memory)) {
+            return this.continueTask(memory, userMessage, context);
+        } else {
+            return this.newTask(memory, userMessage, context);
+        }
+    }
+
+    public newTask(memory: Memory, userMessage?: string|undefined, context: TAppContext = undefined): Promise<TaskResult> {
+        // Initialize conversation history
+        memory.set(TaskManager.TASK_HISTORY_PROPERTY, []);
+        memory.set(TaskManager.IN_TASK_PROPERTY, true);
+
+        // Run task loop with appropriate overrides
+        return this.runTaskLoop(this._config.newTaskModel, memory, userMessage, context);
     }
 
     public async continueTask(memory: Memory, userMessage: string, context: TAppContext = undefined): Promise<TaskResult> {
+        // Ensure we're in an existing task
+        if (!this.inTask(memory)) {
+            throw new Error(`TaskManager.continueTask() was called but we're not in a task.`)
+        }
 
+        // Run task loop with appropriate overrides
+        return this.runTaskLoop(this._config.continueTaskModel, memory, userMessage, context);
+    }
+
+    private async runTaskLoop(overrides: ModelSettings|undefined, memory: Memory, userMessage: string|undefined, context: TAppContext|undefined): Promise<TaskResult> {
+        while (true) {
+            // Create prompt
+
+            // Verify that were within our token budget
+
+            // Determine client API to use (chat or text completions)
+
+            // Perform the turn
+
+            // Check for command that was predicted
+            // - 'ask' yields with the question
+            // - 'finalAnswer' yields with the answer
+            // - otherwise execute command and loop
+        }
     }
 }
 
